@@ -1,49 +1,55 @@
 #include <stdio.h>
 #include <ctype.h>
 
-void getAction();
+void getAction(int *);
 void getAnswer(char *);
 void convertAnswer(char *, int *, int *, int *);
 int classifyAnswer(char);
 
-
 int main()
 {
-    char userAnswer[5];
-    int userLine, userColumn, userMove;
-    // unsigned char gameAnswer = 0b00000000;
+    int userAction[3] = {-1, -1, -1};
+    unsigned char gameAnswer = 0b00000000;
+
     while (1)
     {
-        while (1)
-        {
-
-            userAnswer[0] = '0';
-            getAnswer(userAnswer);
-            convertAnswer(userAnswer, &userLine, &userColumn, &userMove);
-            if (userAnswer[0] != '0')
-            { 
-                printf("\nThe action was written incorrectly. Please try again.\n\n\n");
-                continue;
-            }
-            break;
-        }
-        printf("%s", userAnswer);
+        getAction(userAction);
         break;
     };
 
     return 0;
 };
 
+void getAction(int *userAction)
+{
+    char userAnswer[5];
+
+    while (1)
+    {
+        userAnswer[0] = '0';
+        getAnswer(userAnswer);
+        convertAnswer(userAnswer, userAction, userAction + 1, userAction + 2);
+        printf("\n 1. %d %d %d \n", *userAction, *(userAction + 1), *(userAction + 2));
+        if (userAnswer[0] != '0')
+        {
+            printf("\nThe action was written incorrectly. Please try again.\n\n\n");
+            *userAction = -1;
+            *(userAction + 1) = -1;
+            *(userAction + 2) = -1;
+            continue;
+        }
+        break;
+    }
+}
+
 void getAnswer(char *userAnswer)
 {
-
-    printf("%15c Keys:\n\n", ' ');
-    printf("First Line  %8c  %10c First Column  %8c\n", 'Q', ' ', 'I');
-    printf("Second Line %8c  %10c Second Column %8c\n", 'W', ' ', 'O');
-    printf("Third Line  %8c  %10c Third Column  %8c\n", 'E', ' ', 'E');
-    printf("Up          %8c  %10c Right         %8c\n", 'U', ' ', 'R');
-    printf("Down        %8c  %10c Left          %8c\n\n", 'D', ' ', 'L');
-
+    printf("%22c Keys:\n\n", ' ');
+    printf("First Line  %8c%10c First Column  %8c\n", 'Q', ' ', 'I');
+    printf("Second Line %8c%10c Second Column %8c\n", 'W', ' ', 'O');
+    printf("Third Line  %8c%10c Third Column  %8c\n", 'E', ' ', 'E');
+    printf("Up          %8c%10c Right         %8c\n", 'U', ' ', 'R');
+    printf("Down        %8c%10c Left          %8c\n\n", 'D', ' ', 'L');
     printf("Enter your move (You can type in any order. Do not use spaces)\n");
     printf("Your move: ");
     scanf("%3s", userAnswer + 1);
@@ -86,7 +92,7 @@ void convertAnswer(char *userAnswer, int *userLine, int *userColumn, int *userMo
     for (int i = 1; i < 4; i++)
     {
         char letter = toupper(*(userAnswer + i));
-        
+
         answerGroup = classifyAnswer(letter);
         if (answerGroup == 0 || validate[answerGroup] == 1)
         {
@@ -97,7 +103,6 @@ void convertAnswer(char *userAnswer, int *userLine, int *userColumn, int *userMo
         {
             validate[answerGroup] = 1;
         }
-
         switch (letter)
         {
         case 'Q':
@@ -130,9 +135,6 @@ void convertAnswer(char *userAnswer, int *userLine, int *userColumn, int *userMo
         case 'R':
             *userMove = 6;
             break;
-        default:
-            *userAnswer = '1';
-            continue;
         };
     }
 }
