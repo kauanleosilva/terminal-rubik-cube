@@ -1,23 +1,56 @@
 #include <stdio.h>
 #include <ctype.h>
 
+#define PURPLE \x1b[48;5;129m
+#define BLUE \x1b[44m
+#define BURGUNDY \x1b[48;5;88m
+#define YELLOW \x1b[43m
+#define PINK \x1b[48;5;201m
+#define GREEN \x1b[42m
+#define RESET \x1b[0m
+
+#if
+
+
+
+#endif
+
+
+char initCube(char *);
 void getAction(int *);
+void rotateCube(int, int, int);
 void getAnswer(char *);
-void convertAnswer(char *, int *, int *, int *);
 int classifyAnswer(char);
+void convertAnswer(char *, int *, int *, int *);
+
+typedef struct
+{
+    char face[6][9];
+} Cube;
 
 int main()
 {
     int userAction[3] = {-1, -1, -1};
+    Cube cube;
     unsigned char gameAnswer = 0b00000000;
 
+    initCube(&cube);
     while (1)
     {
         getAction(userAction);
+        rotateCube(*(userAction), *(userAction + 1), *(userAction + 2));
         break;
     };
 
     return 0;
+};
+
+
+char initCube(char *cube) {
+    int f,b
+    for()
+
+
 };
 
 void getAction(int *userAction)
@@ -88,8 +121,8 @@ void convertAnswer(char *userAnswer, int *userLine, int *userColumn, int *userMo
 {
     int answerGroup;
     int validate[4] = {0};
-
-    for (int i = 1; i < 4; i++)
+    int i;
+    for (i = 1; i < 4; i++)
     {
         char letter = toupper(*(userAnswer + i));
 
