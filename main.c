@@ -9,12 +9,9 @@
 #define GREEN \x1b[42m
 #define RESET \x1b[0m
 
-#if
-
-
-
+#ifdef _WIN32
+    #include <windows.h>
 #endif
-
 
 char initCube(char *);
 void getAction(int *);
@@ -30,6 +27,15 @@ typedef struct
 
 int main()
 {
+
+    #ifdef _WIN32
+        HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+        DWORD dwMode = 0;
+        if (GetConsoleMode(hOut, &dwMode)) {
+            dwMode |= 0x0004;
+            SetConsoleMode(hOut, dwMode);
+        }
+    #endif
     int userAction[3] = {-1, -1, -1};
     Cube cube;
     unsigned char gameAnswer = 0b00000000;
