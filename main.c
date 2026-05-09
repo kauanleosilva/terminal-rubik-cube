@@ -1,33 +1,35 @@
 #include <stdio.h>
 #include <ctype.h>
 
-#define PURPLE \x1b[48;5;129m
-#define BLUE \x1b[44m
-#define BURGUNDY \x1b[48;5;88m
-#define YELLOW \x1b[43m
-#define PINK \x1b[48;5;201m
-#define GREEN \x1b[42m
-#define RESET \x1b[0m
+#define MAROON "\x1b[48;5;88m"
+#define BLUE "\x1b[44m"
+#define GREEN "\x1b[42m"
+#define ROSE "\x1b[48;5;201m"
+#define YELLOW "\x1b[43m"
+#define PURPLE "\x1b[48;5;129m"
+#define RESET "\x1b[0m"
+#define BLOCK "\u2588\u2588"
 
 #ifdef _WIN32
     #include <windows.h>
 #endif
 
-char initCube(char *);
+typedef struct Cube
+{
+    char face[6][9];
+    unsigned char solution;
+} Cube;
+
+void initCube(Cube *);
+char getColor(int);
 void getAction(int *);
 void rotateCube(int, int, int);
 void getAnswer(char *);
 int classifyAnswer(char);
 void convertAnswer(char *, int *, int *, int *);
 
-typedef struct
-{
-    char face[6][9];
-} Cube;
-
 int main()
 {
-
     #ifdef _WIN32
         HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
         DWORD dwMode = 0;
@@ -35,29 +37,53 @@ int main()
             dwMode |= 0x0004;
             SetConsoleMode(hOut, dwMode);
         }
+        SetConsoleOutputCP(65001);
     #endif
     int userAction[3] = {-1, -1, -1};
     Cube cube;
-    unsigned char gameAnswer = 0b00000000;
+    cube.solution = 0b00000000;
 
     initCube(&cube);
     while (1)
     {
-        getAction(userAction);
-        rotateCube(*(userAction), *(userAction + 1), *(userAction + 2));
+        // getAction(userAction);
+        // rotateCube(*(userAction), *(userAction + 1), *(userAction + 2));
+        printf("%s", cube.face[5]);
         break;
     };
 
     return 0;
-};
+}
 
+void initCube(Cube *cube) {
+    int f,b;
+    char color;
+    for(f = 0; f < 6; f++) {
+        for(b = 0; b < 9; b++) {
+            cube->face[f][b] = getColor(f);
+        }
+    };
+}
 
-char initCube(char *cube) {
-    int f,b
-    for()
-
-
-};
+char getColor(int option) {
+    char color;
+    switch (option)
+    {
+    case 0:
+        color = 'M';
+    case 1:
+        color = 'B';
+    case 2:
+        color = 'G';
+    case 3:
+        color = 'R';
+    case 4:
+        color = 'Y';
+    case 5:
+        color = 'P';
+    }
+    return color;
+}
 
 void getAction(int *userAction)
 {
