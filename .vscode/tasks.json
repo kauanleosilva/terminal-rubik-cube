@@ -24,7 +24,7 @@
             "detail": "Usa o CMD para compilar via Makefile e abrir o executável em uma nova janela."
         },
         {
-            "label": "Limpar Projeto (Clean)",
+            "label": "clearExe",
             "type": "shell",
             "command": "mingw32-make clean",
             "options": {
