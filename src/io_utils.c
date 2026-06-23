@@ -21,14 +21,15 @@ void setupConsole()
 #endif
 }
 
-void startGame(Cube *cube)
+void startGame(Cube *cube, char *seed)
 {
-    char seed[21];
     initCube(cube);
     while (1)
     {
         char userAnswer[22];
-        int i, valid = 0;
+        int i;
+        char error = 0;
+
         printf("Cube Seed (Max 20 characters): ");
         scanf("%21s", userAnswer);
         clearBuffer();
@@ -36,195 +37,241 @@ void startGame(Cube *cube)
         {
             if (!(isprint((unsigned char)*(userAnswer + i))))
             {
-                valid = -1;
+                error = 1;
                 break;
             }
         }
-        if (valid == -1)
+        if (strlen(userAnswer) > 20)
         {
-            printf("Invalid characters detected! Please use standard letters, numbers, or symbols only.\n\n");
-            continue;
-        } else if (strlen(userAnswer) > 20)
-        {
-            printf("Seed to long! Maximum allowed is 20 characters.\n\n");
-            continue;
+            error = 2;
         }
+        if (throwError(error))
+            continue;
         strcpy(seed, userAnswer);
         break;
     }
+    clearTerminal();
     scrambleCube(cube, seed, strlen(seed));
 }
 
-void getAction(int *userAction, Cube *cube, int face)
+void getAction(int *userAction, Cube *cube, char *seed)
 {
-    clearTerminal();
     while (1)
     {
         unsigned char flag = 0b10000000;
-        char userAnswer[5] = {'0', 'Z', 'Z', 'Z', '\0'};
-        showCube(*cube, face);
+        char userAnswer[5] = {0, 'Z', 'Z', '\0'};
+
+        *userAction = -1;
+        *(userAction + 1) = -1;
+        *(userAction + 2) = -1;
+        *(userAction + 3) = -1;
+        printf("Cube Seed: %s\n\n", seed);
+        showCube(*cube, cube->facePosition[0]);
+        showCube(*cube, cube->facePosition[1]);
+        showCube(*cube, cube->facePosition[5]);
+        showCube(*cube, cube->facePosition[4]);
+
         getAnswer(userAnswer);
-        convertAnswer(userAnswer, userAction, userAction + 1, userAction + 2, userAction + 3, &flag);
-        if (userAnswer[0] != '0')
-        {
-            clearTerminal();
-            printf("\nThe action was written incorrectly. Please try again.\n\n\n");
-            *userAction = -1;
-            *(userAction + 1) = -1;
-            *(userAction + 2) = -1;
+        if (throwError(userAnswer[0]))
             continue;
-        }
-        else if (flag ^ 0b10000000)
+        convertAnswer(userAnswer, userAction, userAction + 1, userAction + 2, userAction + 3, &flag);
+        if (throwError(userAnswer[0]))
+            continue;
+        if (flag ^ 0b10000000)
         {
             cube->faceComplete &= 0b01111111;
         }
+        clearTerminal();
         break;
     }
 }
 
 void getAnswer(char *userAnswer)
 {
-    char backup = *(userAnswer + 3);
+    char limitCap[4];
+
     printf("\n\n%21c Keys:\n\n", ' ');
     printf("First Row  %8c%10c First Col  %8c\n", 'Q', ' ', 'I');
     printf("Second Row %8c%10c Second Col %8c\n", 'W', ' ', 'O');
     printf("Third Row  %8c%10c Third Col  %8c\n", 'E', ' ', 'P');
     printf("Move Up    %8c%10c Move Right %8c\n", 'U', ' ', 'R');
     printf("Move Down  %8c%10c Move Left  %8c\n\n", 'D', ' ', 'L');
-    printf("Tip 1: To rotate a face, press a row, column and movement key in any order.\n");
+    printf("Tip 1: To rotate a face, press a row/column and movement key in any order.\n");
     printf("Tip 2: To rotate the cube, press \"F\" followed by a movement key.\n");
     printf("Tip 3: To rotate the front face, press \"S\" followed by a movement key (\"R\" for CW or \"L\" for CCW).\n");
     printf("Tip 4: To end the game, press \"X\".\n\n");
     printf("Your move: ");
-    scanf("%3s", userAnswer + 1);
+    scanf("%3s", limitCap);
+    if (strlen(limitCap) > 2)
+    {
+        *userAnswer = 3;
+    }
+    else
+    {
+        strcpy(userAnswer + 1, limitCap);
+    }
     clearBuffer();
-    if (*(userAnswer + 3) == '\0')
-    {
-        *(userAnswer + 3) = backup;
-    }
-    if (*(userAnswer + 2) == '\0')
-    {
-        *(userAnswer + 2) = backup;
-    }
 }
 
-void convertAnswer(char *userAnswer, int *userLine, int *userColumn, int *userMove, int *specialMove, unsigned char *flag)
+void convertAnswer(char *userAnswer, int *userColumn, int *userRow, int *userMove, int *specialMove, unsigned char *flag)
 {
-    char lOne = toupper(*(userAnswer + 1)), lTwo = toupper(*(userAnswer + 2)), lThree = *(userAnswer + 3);
+    char lOne = toupper(*(userAnswer + 1)), lTwo = toupper(*(userAnswer + 2));
 
-    if (lOne == 'F' && (lTwo == 'R' || lTwo == 'U' || lTwo == 'D' || lTwo == 'L') && lThree == 'Z')
+    if (lOne == 'X' && lTwo == '\0')
     {
+        if (lTwo == '\0')
+        {
+            *flag &= 0b00000000;
+        }
+        else
+        {
+            *userAnswer = 9;
+        }
+    }
+    else if (lOne == 'F')
+    {
+        *specialMove = 10;
         switch (lTwo)
         {
         case 'R':
-            *specialMove = 16;
+            *userMove = 0;
             break;
         case 'U':
-            *specialMove = 18;
+            *userMove = 1;
             break;
         case 'D':
-            *specialMove = 12;
+            *userMove = 2;
             break;
         case 'L':
-            *specialMove = 14;
+            *userMove = 3;
+            break;
+        default:
+            *userAnswer = 7;
             break;
         }
     }
-    else if (lOne == 'S' && (lTwo == 'R' || lTwo == 'L') && lThree == 'Z')
+    else if (lOne == 'S')
     {
+        *specialMove = 20;
         switch (lTwo)
         {
         case 'R':
-            *specialMove = 26;
+            *userMove = 6;
             break;
         case 'L':
-            *specialMove = 24;
+            *userMove = 4;
+            break;
+        default:
+            *userAnswer = 8;
+            break;
+        }
+    }
+    else if (lOne == 'Q' || lOne == 'W' || lOne == 'E')
+    {
+        switch (lOne)
+        {
+        case 'Q':
+            *userRow = 0;
+            break;
+        case 'W':
+            *userRow = 1;
+            break;
+        case 'E':
+            *userRow = 2;
+            break;
+        }
+        switch (lTwo)
+        {
+        case 'R':
+            *userMove = 6;
+            break;
+        case 'L':
+            *userMove = 4;
+            break;
+        default:
+            *userAnswer = 4;
+            break;
+        }
+    }
+    else if (lOne == 'I' || lOne == 'O' || lOne == 'P')
+    {
+        switch (lOne)
+        {
+        case 'I':
+            *userColumn = 0;
+            break;
+        case 'O':
+            *userColumn = 1;
+            break;
+        case 'P':
+            *userColumn = 2;
+            break;
+        }
+        switch (lTwo)
+        {
+        case 'U':
+            *userMove = 8;
+            break;
+        case 'D':
+            *userMove = 2;
+            break;
+        default:
+            *userAnswer = 5;
             break;
         }
     }
     else
     {
-        int answerGroup, validate[4] = {0}, i;
-        for (i = 1; i < 4; i++)
-        {
-            if (lOne == 'X' && lTwo == 'Z' && lThree == 'Z')
-            {
-                *flag &= 0b00000000;
-                break;
-            }
-            char letter = toupper(*(userAnswer + i));
-            answerGroup = classifyAnswer(letter);
-
-            if (answerGroup == 0 || validate[answerGroup] == 1)
-            {
-                *userAnswer = 1;
-                break;
-            }
-            else
-            {
-                validate[answerGroup] = 1;
-            }
-            switch (letter)
-            {
-            case 'Q':
-                *userLine = 0;
-                break;
-            case 'W':
-                *userLine = 1;
-                break;
-            case 'E':
-                *userLine = 2;
-                break;
-            case 'I':
-                *userColumn = 0;
-                break;
-            case 'O':
-                *userColumn = 1;
-                break;
-            case 'P':
-                *userColumn = 2;
-                break;
-            case 'U':
-                *userMove = 8;
-                break;
-            case 'D':
-                *userMove = 2;
-                break;
-            case 'L':
-                *userMove = 4;
-                break;
-            case 'R':
-                *userMove = 6;
-                break;
-            };
-        }
+        *userAnswer = 10;
     }
 }
 
-int classifyAnswer(char userAnswer)
+int throwError(char error)
 {
-    switch (userAnswer)
+    switch ((int)error)
     {
-    case 'Q':
+    case 0:
+        return 0;
+    case 1:
+        clearTerminal();
+        printf("Invalid characters detected! Please use standard letters, numbers, or symbols only.\n\n");
         return 1;
-    case 'W':
+    case 2:
+        clearTerminal();
+        printf("Seed too long! Maximum allowed is 20 characters.\n\n");
         return 1;
-    case 'E':
+    case 3:
+        clearTerminal();
+        printf("Action too long! Maximum allowed is 2 characters.\n\n");
         return 1;
-    case 'I':
-        return 2;
-    case 'O':
-        return 2;
-    case 'P':
-        return 2;
-    case 'U':
-        return 3;
-    case 'D':
-        return 3;
-    case 'L':
-        return 3;
-    case 'R':
-        return 3;
+    case 4:
+        clearTerminal();
+        printf("Invalid action! Rows can only move right or left.\n\n");
+        return 1;
+    case 5:
+        clearTerminal();
+        printf("Invalid action! Columns can only move up or down.\n\n");
+        return 1;
+    case 6:
+        clearTerminal();
+        printf("Invalid action! Please do not use duplicate or invalid characters.\n\n");
+        return 1;
+    case 7:
+        clearTerminal();
+        printf("Invalid action! The entire cube can only be rotated up, down, left, or right.\n\n");
+        return 1;
+    case 8:
+        clearTerminal();
+        printf("The front face can only be rotated right or left.\n\n");
+        return 1;
+    case 9:
+        clearTerminal();
+        printf("Invalid action! Press only the X key to close, do not combine it with other keys.\n\n");
+        return 1;
+    case 10:
+        clearTerminal();
+        printf("Invalid action! Please read the tips and enter a valid command.\n\n");
+        return 1;
     default:
         return 0;
     }
@@ -240,6 +287,7 @@ void endGame()
 void clearBuffer()
 {
     int clear;
+
     while ((clear = getchar()) != '\n' && clear != EOF)
         ;
 }

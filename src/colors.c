@@ -3,6 +3,7 @@
 char getColor(int option)
 {
     char color;
+
     switch (option)
     {
     case 0:
@@ -24,12 +25,14 @@ char getColor(int option)
         color = 'P';
         break;
     }
+
     return color;
 }
 
 char *convertColor(char code)
 {
     char *color;
+
     switch (code)
     {
     case 'M':
@@ -53,5 +56,6 @@ char *convertColor(char code)
     default:
         break;
     }
+
     return color;
 }

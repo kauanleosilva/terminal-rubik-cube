@@ -1,12 +1,13 @@
 #pragma once
+
 #include "cube.h"
 
 void setupConsole();
-void startGame(Cube *cube);
-void getAction(int *, Cube *, int);
-void getAnswer(char *);
-int classifyAnswer(char);
-void convertAnswer(char *, int *, int *, int *, int *, unsigned char *);
+void startGame(Cube *cube, char *seed);
+void getAction(int *userAction, Cube *cube, char *seed);
+void getAnswer(char *userAnswer);
+void convertAnswer(char *userAnswer, int *userColumn, int *userRow, int *userMove, int *specialMove, unsigned char *flag);
 void endGame();
 void clearBuffer();
 void clearTerminal();
+int throwError(char error);
