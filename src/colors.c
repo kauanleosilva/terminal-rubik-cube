@@ -29,32 +29,61 @@ char getColor(int option)
     return color;
 }
 
-char *convertColor(char code)
+char *convertColor(char code, char flag)
 {
     char *color;
 
-    switch (code)
+    if (flag)
     {
-    case 'M':
-        color = MAROON;
-        break;
-    case 'B':
-        color = BLUE;
-        break;
-    case 'G':
-        color = GREEN;
-        break;
-    case 'R':
-        color = ROSE;
-        break;
-    case 'Y':
-        color = YELLOW;
-        break;
-    case 'P':
-        color = PURPLE;
-        break;
-    default:
-        break;
+        switch (code)
+        {
+        case 'M':
+            color = MAROON;
+            break;
+        case 'B':
+            color = BLUE;
+            break;
+        case 'G':
+            color = GREEN;
+            break;
+        case 'R':
+            color = ROSE;
+            break;
+        case 'Y':
+            color = YELLOW;
+            break;
+        case 'P':
+            color = PURPLE;
+            break;
+        default:
+            break;
+        }
+    }
+    else
+    {
+        switch (code)
+        {
+        case 'M':
+            color = BG_MAROON;
+            break;
+        case 'B':
+            color = BG_BLUE;
+            break;
+        case 'G':
+            color = BG_GREEN;
+            break;
+        case 'R':
+            color = BG_ROSE;
+            break;
+        case 'Y':
+            color = BG_YELLOW;
+            break;
+        case 'P':
+            color = BG_PURPLE;
+            break;
+        default:
+            break;
+        }
     }
 
     return color;

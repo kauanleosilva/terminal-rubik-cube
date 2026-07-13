@@ -66,10 +66,7 @@ void getAction(int *userAction, Cube *cube, char *seed)
         *(userAction + 2) = -1;
         *(userAction + 3) = -1;
         printf("Cube Seed: %s\n\n", seed);
-        showCube(*cube, cube->facePosition[0]);
-        showCube(*cube, cube->facePosition[1]);
-        showCube(*cube, cube->facePosition[5]);
-        showCube(*cube, cube->facePosition[4]);
+        showCube(*cube);
 
         getAnswer(userAnswer);
         if (throwError(userAnswer[0]))

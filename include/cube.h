@@ -1,6 +1,8 @@
 #pragma once
 
 #define BLOCK "\u25A0"
+#define UH_BLOCK "\u2580"
+#define BH_BLOCK "\u2584"
 
 typedef struct Cube
 {
@@ -12,5 +14,5 @@ typedef struct Cube
 void initCube(Cube *);
 void seedGenerator(char *, int, int *);
 void scrambleCube(Cube *, char *, int);
-void showCube(Cube, int);
+void showCube(Cube);
 void rotateCube(Cube *, int, int, int, int);

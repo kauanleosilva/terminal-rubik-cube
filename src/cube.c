@@ -3,6 +3,7 @@
 #include "stdio.h"
 #include <ctype.h>
 #include <stdint.h>
+#include <string.h>
 
 #define quantMoves 30
 
@@ -116,25 +117,192 @@ void scrambleCube(Cube *cube, char *rawSeed, int size)
     }
 }
 
-void showCube(Cube cube, int face)
+void showCube(Cube cube)
 {
-    int b, count = 0;
+    int i, j, k;
+    char lColor[12];
 
-    printf("Cube: \n");
-    printf("%21c", ' ');
-    for (b = 0; b < 9; b++)
+    printf("Cube: \n\n\n");
+    printf("%46c", ' ');
+    for (i = 0; i < 9; i++)
     {
-        printf(" %s%s%s", convertColor(cube.faceValue[face][b]), BLOCK, RESET);
-        count++;
-        if (count % 3 == 0)
+        strcpy(lColor, convertColor(cube.faceValue[cube.facePosition[1]][i], 1));
+        printf("%s%s%s", lColor, BH_BLOCK, RESET);
+        for (j = 0; j < 3; j++)
         {
-            printf("\n");
-            if (count != 9)
+            printf("%s%s%s%s", convertColor(cube.faceValue[cube.facePosition[1]][i], 0), lColor, BLOCK, RESET);
+        }
+        if (i == 2)
+        {
+            printf("%s%s%s%s", convertColor(cube.faceValue[cube.facePosition[2]][2], 0), lColor, UH_BLOCK, RESET);
+            printf("\u200B\n%44c", ' ');
+        }
+        else if (i == 5)
+        {
+            printf("%s%s%s%s", convertColor(cube.faceValue[cube.facePosition[2]][1], 0), lColor, UH_BLOCK, RESET);
+            printf("%s%s%s%s", convertColor(cube.faceValue[cube.facePosition[2]][2], 0), convertColor(cube.faceValue[cube.facePosition[2]][2], 1), BLOCK, RESET);
+            printf("%s%s%s%s", convertColor(cube.faceValue[cube.facePosition[2]][2], 0), convertColor(cube.faceValue[cube.facePosition[2]][2], 1), BLOCK, RESET);
+            printf("\u200B\n%42c", ' ');
+        }
+        else if (i == 8)
+        {
+            printf("%s%s%s%s", convertColor(cube.faceValue[cube.facePosition[2]][0], 0), lColor, UH_BLOCK, RESET);
+            printf("%s%s%s%s", convertColor(cube.faceValue[cube.facePosition[2]][1], 0), convertColor(cube.faceValue[cube.facePosition[2]][1], 1), BLOCK, RESET);
+            printf("%s%s%s%s", convertColor(cube.faceValue[cube.facePosition[2]][1], 0), convertColor(cube.faceValue[cube.facePosition[2]][1], 1), BLOCK, RESET);
+            printf("%s%s%s", convertColor(cube.faceValue[cube.facePosition[2]][2], 1), UH_BLOCK, RESET);
+            printf("%s%s%s", convertColor(cube.faceValue[cube.facePosition[2]][5], 1), BH_BLOCK, RESET);
+            printf("\u200B\n%40c", ' ');
+        }
+        else
+        {
+            printf("%s%s%s", lColor, UH_BLOCK, RESET);
+        }
+    }
+    for (i = 0; i < 3; i++)
+    {
+        strcpy(lColor, convertColor(cube.faceValue[cube.facePosition[0]][i], 1));
+        printf("%s%s%s", lColor, BH_BLOCK, RESET);
+        for (j = 0; j < 3; j++)
+        {
+            printf("%s%s%s%s", convertColor(cube.faceValue[cube.facePosition[1]][6 + i], 0), lColor, BH_BLOCK, RESET);
+        }
+        if (i == 2)
+        {
+            printf("%s%s%s%s", convertColor(cube.faceValue[cube.facePosition[1]][6 + i], 0), convertColor(cube.faceValue[cube.facePosition[2]][0], 1), BH_BLOCK, RESET);
+            printf("%s%s%s%s", convertColor(cube.faceValue[cube.facePosition[2]][0], 0), convertColor(cube.faceValue[cube.facePosition[2]][0], 1), BLOCK, RESET);
+            printf("%s%s%s%s", convertColor(cube.faceValue[cube.facePosition[2]][0], 0), convertColor(cube.faceValue[cube.facePosition[2]][0], 1), BLOCK, RESET);
+            printf("%s%s%s", convertColor(cube.faceValue[cube.facePosition[2]][1], 1), UH_BLOCK, RESET);
+            printf("%s%s%s", convertColor(cube.faceValue[cube.facePosition[2]][4], 1), BH_BLOCK, RESET);
+            printf("%s%s%s%s", convertColor(cube.faceValue[cube.facePosition[2]][5], 0), convertColor(cube.faceValue[cube.facePosition[2]][5], 1), BLOCK, RESET);
+            printf("%s%s%s%s", convertColor(cube.faceValue[cube.facePosition[2]][5], 0), convertColor(cube.faceValue[cube.facePosition[2]][5], 1), BLOCK, RESET);
+            printf("\u200B\n%40c", ' ');
+        }
+        else
+        {
+            printf("%s%s%s", convertColor(cube.faceValue[cube.facePosition[1]][6 + i], 1), UH_BLOCK, RESET);
+        }
+    }
+    for (i = 0; i < 3; i++)
+    {
+        strcpy(lColor, convertColor(cube.faceValue[cube.facePosition[0]][i], 1));
+        for (j = 0; j < 4; j++)
+        {
+            printf("%s%s%s%s", convertColor(cube.faceValue[cube.facePosition[0]][i], 0), lColor, BLOCK, RESET);
+        }
+        if (i == 2)
+        {
+            printf("%s%s%s%s", convertColor(cube.faceValue[cube.facePosition[2]][0], 0), convertColor(cube.faceValue[cube.facePosition[2]][0], 1), BLOCK, RESET);
+            printf("%s%s%s", convertColor(cube.faceValue[cube.facePosition[2]][0], 1), UH_BLOCK, RESET);
+            printf("%s%s%s", convertColor(cube.faceValue[cube.facePosition[2]][3], 1), BH_BLOCK, RESET);
+            printf("%s%s%s%s", convertColor(cube.faceValue[cube.facePosition[2]][4], 0), convertColor(cube.faceValue[cube.facePosition[2]][4], 1), BLOCK, RESET);
+            printf("%s%s%s%s", convertColor(cube.faceValue[cube.facePosition[2]][4], 0), convertColor(cube.faceValue[cube.facePosition[2]][4], 1), BLOCK, RESET);
+            printf("%s%s%s%s", convertColor(cube.faceValue[cube.facePosition[2]][5], 0), convertColor(cube.faceValue[cube.facePosition[2]][5], 1), BLOCK, RESET);
+            printf("%s%s%s", convertColor(cube.faceValue[cube.facePosition[2]][5], 1), UH_BLOCK, RESET);
+            printf("\u200B\n%40c", ' ');
+        }
+        else
+        {
+            printf(" ");
+        }
+    }
+    for (i = 0; i < 3; i++)
+    {
+        for (j = 0; j < 4; j++)
+        {
+            printf("%s%s%s", convertColor(cube.faceValue[cube.facePosition[0]][i], 1), UH_BLOCK, RESET);
+        }
+        if (i == 2)
+        {
+            printf("%s%s%s", convertColor(cube.faceValue[cube.facePosition[2]][3], 1), BH_BLOCK, RESET);
+            printf("%s%s%s%s", convertColor(cube.faceValue[cube.facePosition[2]][3], 0), convertColor(cube.faceValue[cube.facePosition[2]][3], 1), BLOCK, RESET);
+            printf("%s%s%s%s", convertColor(cube.faceValue[cube.facePosition[2]][3], 0), convertColor(cube.faceValue[cube.facePosition[2]][3], 1), BLOCK, RESET);
+            printf("%s%s%s%s", convertColor(cube.faceValue[cube.facePosition[2]][4], 0), convertColor(cube.faceValue[cube.facePosition[2]][4], 1), BLOCK, RESET);
+            printf("%s%s%s", convertColor(cube.faceValue[cube.facePosition[2]][4], 1), UH_BLOCK, RESET);
+            printf("%s%s%s", convertColor(cube.faceValue[cube.facePosition[2]][8], 1), BH_BLOCK, RESET);
+            printf("%s%s%s%s", convertColor(cube.faceValue[cube.facePosition[2]][8], 0), convertColor(cube.faceValue[cube.facePosition[2]][8], 1), BLOCK, RESET);
+            printf("\u200B\n%40c", ' ');
+        }
+        else
+        {
+            printf(" ");
+        }
+    }
+    for (i = 0; i < 2; i++)
+    {
+        for (j = 3; j < 6; j++)
+        {
+            for (k = 0; k < 4; k++)
             {
-                printf("%21c", ' ');
+                printf("%s%s%s%s", convertColor(cube.faceValue[cube.facePosition[0]][j], 0), convertColor(cube.faceValue[cube.facePosition[0]][j], 1), BLOCK, RESET);
+            }
+            if (j == 5 && i == 0)
+            {
+                printf("%s%s%s%s", convertColor(cube.faceValue[cube.facePosition[2]][3], 0), convertColor(cube.faceValue[cube.facePosition[2]][3], 1), BLOCK, RESET);
+                printf("%s%s%s%s", convertColor(cube.faceValue[cube.facePosition[2]][3], 0), convertColor(cube.faceValue[cube.facePosition[2]][3], 1), BLOCK, RESET);
+                printf("%s%s%s", convertColor(cube.faceValue[cube.facePosition[2]][3], 1), UH_BLOCK, RESET);
+                printf("%s%s%s", convertColor(cube.faceValue[cube.facePosition[2]][7], 1), BH_BLOCK, RESET);
+                printf("%s%s%s%s", convertColor(cube.faceValue[cube.facePosition[2]][7], 0), convertColor(cube.faceValue[cube.facePosition[2]][7], 1), BLOCK, RESET);
+                printf("%s%s%s%s", convertColor(cube.faceValue[cube.facePosition[2]][8], 0), convertColor(cube.faceValue[cube.facePosition[2]][8], 1), BLOCK, RESET);
+                printf("%s%s%s%s", convertColor(cube.faceValue[cube.facePosition[2]][8], 0), convertColor(cube.faceValue[cube.facePosition[2]][8], 1), BLOCK, RESET);
+                printf("\u200B\n%40c", ' ');
+            }
+            else if (j == 5 && i == 1)
+            {
+                printf("%s%s%s", convertColor(cube.faceValue[cube.facePosition[2]][3], 1), UH_BLOCK, RESET);
+                printf("%s%s%s", convertColor(cube.faceValue[cube.facePosition[2]][6], 1), BH_BLOCK, RESET);
+                printf("%s%s%s%s", convertColor(cube.faceValue[cube.facePosition[2]][6], 0), convertColor(cube.faceValue[cube.facePosition[2]][6], 1), BLOCK, RESET);
+                printf("%s%s%s%s", convertColor(cube.faceValue[cube.facePosition[2]][7], 0), convertColor(cube.faceValue[cube.facePosition[2]][7], 1), BLOCK, RESET);
+                printf("%s%s%s%s", convertColor(cube.faceValue[cube.facePosition[2]][7], 0), convertColor(cube.faceValue[cube.facePosition[2]][7], 1), BLOCK, RESET);
+                printf("%s%s%s", convertColor(cube.faceValue[cube.facePosition[2]][8], 1), UH_BLOCK, RESET);
+                printf("\u200B\n%40c", ' ');
+            }
+            else
+            {
+                printf(" ");
             }
         }
     }
+    for (i = 6; i < 9; i++)
+    {
+        for (j = 0; j < 4; j++)
+        {
+            printf("%s%s%s", convertColor(cube.faceValue[cube.facePosition[0]][i], 1), BH_BLOCK, RESET);
+        }
+        if (i == 8)
+        {
+                printf("%s%s%s%s", convertColor(cube.faceValue[cube.facePosition[2]][6], 0), convertColor(cube.faceValue[cube.facePosition[2]][6], 1), BLOCK, RESET);
+                printf("%s%s%s%s", convertColor(cube.faceValue[cube.facePosition[2]][6], 0), convertColor(cube.faceValue[cube.facePosition[2]][6], 1), BLOCK, RESET);
+                printf("%s%s%s%s", convertColor(cube.faceValue[cube.facePosition[2]][6], 0), convertColor(cube.faceValue[cube.facePosition[2]][6], 1), BLOCK, RESET);
+                printf("%s%s%s", convertColor(cube.faceValue[cube.facePosition[2]][7], 1), UH_BLOCK, RESET);
+                printf("\u200B\n%40c", ' ');
+        } else {
+            printf(" ");
+        }
+    }
+    for (i = 6; i < 9; i++)
+    {
+        for (j = 0; j < 4; j++)
+        {
+            printf("%s%s%s%s", convertColor(cube.faceValue[cube.facePosition[0]][i], 0), convertColor(cube.faceValue[cube.facePosition[0]][i], 1), BLOCK, RESET);
+        }
+        if (i == 8)
+        {
+            printf("%s%s%s%s", convertColor(cube.faceValue[cube.facePosition[2]][6], 0), convertColor(cube.faceValue[cube.facePosition[2]][6], 1), BLOCK, RESET);
+            printf("%s%s%s", convertColor(cube.faceValue[cube.facePosition[2]][6], 1), UH_BLOCK, RESET);
+            printf("\u200B\n%40c", ' ');
+        } else {
+            printf(" ");
+        }
+    }
+    for (i = 6; i < 9; i++)
+    {
+        for (j = 0; j < 4; j++)
+        {
+            printf("%s%s%s", convertColor(cube.faceValue[cube.facePosition[0]][i], 1), UH_BLOCK, RESET);
+        }
+        printf(" ");
+    }
+    printf("\u200B\n%40c", ' ');
 }
 
 void rotateCube(Cube *cube, int column, int row, int move, int specialMove)
