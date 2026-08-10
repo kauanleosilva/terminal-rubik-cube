@@ -2,9 +2,19 @@
 
 #include "cube.h"
 
+typedef struct pixel
+{
+    char block;
+    int fgFace;
+    int fgColor;
+    int bgFace;
+    int bgColor;
+} pixel;
+
 void setupConsole();
-void startGame(Cube *cube, char *seed);
-void getAction(int *userAction, Cube *cube, char *seed);
+void setPixel(pixel canvas[][62], int row, int col, char block, int fgFace, int fgColor, int bgFace, int bgColor);
+void startGame(Cube *cube);
+void getAction(int *userAction, Cube *cube);
 void getAnswer(char *userAnswer);
 void convertAnswer(char *userAnswer, int *userColumn, int *userRow, int *userMove, int *specialMove, unsigned char *flag);
 void endGame();

@@ -10,7 +10,10 @@
 void setupConsole()
 {
 #ifdef _WIN32
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    COORD bufferSize;
     HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    HWND hwnd = GetConsoleWindow();
     DWORD dwMode = 0;
     if (GetConsoleMode(hOut, &dwMode))
     {
@@ -18,10 +21,25 @@ void setupConsole()
         SetConsoleMode(hOut, dwMode);
     }
     SetConsoleOutputCP(65001);
+    SetWindowLong(hwnd, GWL_STYLE, GetWindowLong(hwnd, GWL_STYLE) & ~WS_SIZEBOX & ~WS_MAXIMIZEBOX);
+    system("mode con: cols=150 lines=42");
+    GetConsoleScreenBufferInfo(hOut, &csbi);
+    bufferSize.X = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+    bufferSize.Y = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
+    SetConsoleScreenBufferSize(hOut, bufferSize);
 #endif
 }
 
-void startGame(Cube *cube, char *seed)
+void setPixel(pixel canvas[][62], int row, int col, char block, int fgFace, int fgColor, int bgFace, int bgColor)
+{
+    canvas[row][col].block = block;
+    canvas[row][col].fgFace = fgFace;
+    canvas[row][col].fgColor = fgColor;
+    canvas[row][col].bgFace = bgFace;
+    canvas[row][col].bgColor = bgColor;
+}
+
+void startGame(Cube *cube)
 {
     initCube(cube);
     while (1)
@@ -47,14 +65,14 @@ void startGame(Cube *cube, char *seed)
         }
         if (throwError(error))
             continue;
-        strcpy(seed, userAnswer);
+        strcpy(cube->seed, userAnswer);
         break;
     }
     clearTerminal();
-    scrambleCube(cube, seed, strlen(seed));
+    scrambleCube(cube, cube->seed, strlen(cube->seed));
 }
 
-void getAction(int *userAction, Cube *cube, char *seed)
+void getAction(int *userAction, Cube *cube)
 {
     while (1)
     {
@@ -65,9 +83,6 @@ void getAction(int *userAction, Cube *cube, char *seed)
         *(userAction + 1) = -1;
         *(userAction + 2) = -1;
         *(userAction + 3) = -1;
-        printf("Cube Seed: %s\n\n", seed);
-        showCube(*cube);
-
         getAnswer(userAnswer);
         if (throwError(userAnswer[0]))
             continue;
@@ -269,6 +284,12 @@ int throwError(char error)
         clearTerminal();
         printf("Invalid action! Please read the tips and enter a valid command.\n\n");
         return 1;
+    case 11:
+        clearTerminal();
+        printf("Insufficient RAM available. (Press Enter to close)");
+        getchar();
+        exit(1);
+        return 1;
     default:
         return 0;
     }
@@ -278,7 +299,7 @@ void endGame()
 {
     clearTerminal();
     printf("\nGoodbye! (Press Enter to close)\n");
-    clearBuffer();
+    getchar();
 }
 
 void clearBuffer()

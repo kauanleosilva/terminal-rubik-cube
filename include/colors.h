@@ -14,5 +14,4 @@
 #define BG_PURPLE "\x1b[48;5;129m"
 #define RESET "\x1b[0m"
 
-char getColor(int);
 char *convertColor(char, char);
