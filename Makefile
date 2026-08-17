@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -g -fdiagnostics-color=always -I include
-SOURCES = src/main.c src/cube.c src/io_utils.c src/colors.c
+SOURCES = src/main.c src/cube.c src/io_utils.c
 
 # 1. Detecta o Sistema Operacional
 ifeq ($(OS),Windows_NT)

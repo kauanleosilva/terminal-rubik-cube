@@ -1,13 +1,23 @@
-#include "io_utils.h"
-#include "cube.h"
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
 #ifdef _WIN32
 #include <windows.h>
 #endif
+#include "io_utils.h"
+#include "cube.h"
 
-void setupConsole()
+static void getAnswer(char *userAnswer);
+static void parseAnswer(char *userAnswer, int *userColumn, int *userRow, int *userMove, int *specialMove, unsigned char *flag);
+static void setPixel(pixel canvas[][21], int row, int col, char block, int fgFace, int fgColor, int bgFace, int bgColor);
+static char *getVisualComponent(char code, char mode);
+static void drawUpFace(pixel canvas[][21]);
+static void drawFrontFace(pixel canvas[][21]);
+static void drawRightFace(pixel canvas[][21]);
+static void clearBuffer(void);
+static void clearTerminal(void);
+
+void setupConsole(void)
 {
 #ifdef _WIN32
     CONSOLE_SCREEN_BUFFER_INFO csbi;
@@ -28,15 +38,6 @@ void setupConsole()
     bufferSize.Y = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
     SetConsoleScreenBufferSize(hOut, bufferSize);
 #endif
-}
-
-void setPixel(pixel canvas[][62], int row, int col, char block, int fgFace, int fgColor, int bgFace, int bgColor)
-{
-    canvas[row][col].block = block;
-    canvas[row][col].fgFace = fgFace;
-    canvas[row][col].fgColor = fgColor;
-    canvas[row][col].bgFace = bgFace;
-    canvas[row][col].bgColor = bgColor;
 }
 
 void startGame(Cube *cube)
@@ -63,7 +64,7 @@ void startGame(Cube *cube)
         {
             error = 2;
         }
-        if (throwError(error))
+        if (handleError(error))
             continue;
         strcpy(cube->seed, userAnswer);
         break;
@@ -84,10 +85,10 @@ void getAction(int *userAction, Cube *cube)
         *(userAction + 2) = -1;
         *(userAction + 3) = -1;
         getAnswer(userAnswer);
-        if (throwError(userAnswer[0]))
+        if (handleError(userAnswer[0]))
             continue;
-        convertAnswer(userAnswer, userAction, userAction + 1, userAction + 2, userAction + 3, &flag);
-        if (throwError(userAnswer[0]))
+        parseAnswer(userAnswer, userAction, userAction + 1, userAction + 2, userAction + 3, &flag);
+        if (handleError(userAnswer[0]))
             continue;
         if (flag ^ 0b10000000)
         {
@@ -98,7 +99,7 @@ void getAction(int *userAction, Cube *cube)
     }
 }
 
-void getAnswer(char *userAnswer)
+static void getAnswer(char *userAnswer)
 {
     char limitCap[4];
 
@@ -125,7 +126,7 @@ void getAnswer(char *userAnswer)
     clearBuffer();
 }
 
-void convertAnswer(char *userAnswer, int *userColumn, int *userRow, int *userMove, int *specialMove, unsigned char *flag)
+static void parseAnswer(char *userAnswer, int *userColumn, int *userRow, int *userMove, int *specialMove, unsigned char *flag)
 {
     char lOne = toupper(*(userAnswer + 1)), lTwo = toupper(*(userAnswer + 2));
 
@@ -133,7 +134,7 @@ void convertAnswer(char *userAnswer, int *userColumn, int *userRow, int *userMov
     {
         if (lTwo == '\0')
         {
-            *flag &= 0b00000000;
+            *flag &= ~0b10000000;
         }
         else
         {
@@ -238,9 +239,321 @@ void convertAnswer(char *userAnswer, int *userColumn, int *userRow, int *userMov
     }
 }
 
-int throwError(char error)
+static void setPixel(pixel canvas[][21], int row, int col, char block, int fgFace, int fgColor, int bgFace, int bgColor)
 {
-    switch ((int)error)
+    canvas[row][col].block = block;
+    canvas[row][col].fgFace = fgFace;
+    canvas[row][col].fgColor = fgColor;
+    canvas[row][col].bgFace = bgFace;
+    canvas[row][col].bgColor = bgColor;
+}
+
+static void drawUpFace(pixel canvas[][21])
+{
+    int i, j, row = 0, col = 0;
+
+    for (i = 0; i < 9; i++)
+    {
+        setPixel(canvas, row, col, 'b', 1, i, -1, -1);
+        for (j = 1; j < 4; j++)
+        {
+            setPixel(canvas, row, col + j, 'm', 1, i, 1, i);
+        }
+        if ((i + 1) % 3 == 0)
+        {
+            setPixel(canvas, row, col + 4, 'u', 1, i, 2, 2 - ((i - 2) / 3));
+            row++;
+            col = 0;
+        }
+        else
+        {
+            setPixel(canvas, row, col + 4, 'u', 1, i, -1, -1);
+            col += 5;
+        }
+    }
+    for (i = 0; i < 6; i++)
+    {
+        for (j = 0; j < 5; j++)
+        {
+            setPixel(canvas, row, col, 'b', 0, i, -1, -1);
+            if (i < 3)
+            {
+                if (j == 4)
+                {
+                    setPixel(canvas, row, col, 'u', 1, i + 6, -1, -1);
+                }
+                if (i == 2 && j == 4)
+                {
+                    setPixel(canvas, row, col, 'u', 1, 8, 2, 0);
+                }
+                else if (j >= 1 && j <= 3)
+                {
+                    setPixel(canvas, row, col, 'b', 0, i, 1, i + 6);
+                }
+            }
+            else
+            {
+                setPixel(canvas, row, col, 'b', 0, i + 3, -1, -1);
+                if (j == 4)
+                {
+                    setPixel(canvas, row, col, ' ', -1, -1, -1, -1);
+                }
+            }
+            col++;
+        }
+        if ((i + 1) % 3 == 0)
+        {
+            if (i == 2)
+            {
+                row += 5;
+            }
+            else if (i == 5)
+            {
+                row -= 3;
+            }
+            col = 0;
+        }
+    }
+}
+
+static void drawFrontFace(pixel canvas[][21])
+{
+    int i, j, row = 5, col = 0;
+
+    for (i = 0; i < 6; i++)
+    {
+        for (j = 0; j < 4; j++)
+        {
+            setPixel(canvas, row, col + j, 'u', 0, (i % 3) + (i / 3) * 6, -1, -1);
+        }
+        setPixel(canvas, row, col + 4, ' ', -1, -1, -1, -1);
+        if ((i + 1) % 3 == 0)
+        {
+            if (i == 2)
+            {
+                row += 5;
+            }
+            else
+            {
+                row -= 6;
+            }
+            col = 0;
+        }
+        else
+        {
+            col += 5;
+        }
+    }
+    for (i = 0; i < 9; i++)
+    {
+        for (j = 0; j < 4; j++)
+        {
+            if (i >= 3 && i <= 5)
+            {
+                setPixel(canvas, row + 1, col + j, 'm', 0, i, 0, i);
+            }
+            setPixel(canvas, row, col + j, 'm', 0, i, 0, i);
+        }
+        setPixel(canvas, row, col + 4, ' ', -1, -1, -1, -1);
+        setPixel(canvas, row + 1, col + 4, ' ', -1, -1, -1, -1);
+        if ((i + 1) % 3 == 0)
+        {
+            if (i == 2)
+            {
+                row += 2;
+            }
+            else if (i == 5)
+            {
+                row += 3;
+            }
+            else
+            {
+                row = 1;
+            }
+            col = 0;
+        }
+        else
+        {
+            col += 5;
+        }
+    }
+}
+
+static void drawRightFace(pixel canvas[][21])
+{
+    int i, row = 4, col = 14;
+    setPixel(canvas, row, col, 'm', 2, 0, 2, 0);
+    setPixel(canvas, row + 1, col, 'b', 2, 3, -1, -1);
+    setPixel(canvas, row + 2, col, 'm', 2, 3, 2, 3);
+    setPixel(canvas, row + 3, col, 'u', 2, 3, -1, -1);
+    setPixel(canvas, row + 4, col, 'm', 2, 6, 2, 6);
+    setPixel(canvas, row + 5, col, 'm', 2, 6, 2, 6);
+    row--;
+    col++;
+    for (i = 0; i < 3; i++)
+    {
+        setPixel(canvas, row, col, 'm', 2, i, 2, i);
+        setPixel(canvas, row, col + 1, 'm', 2, i, 2, i);
+        setPixel(canvas, row + 2, col, 'm', 2, i + 3, 2, i + 3);
+        setPixel(canvas, row + 2, col + 1, 'm', 2, i + 3, 2, i + 3);
+        setPixel(canvas, row + 5, col, 'm', 2, i + 6, 2, i + 6);
+        setPixel(canvas, row + 5, col + 1, 'm', 2, i + 6, 2, i + 6);
+        setPixel(canvas, row + 1, col, 'u', 2, i, -1, -1);
+        setPixel(canvas, row + 1, col + 1, 'b', 2, i + 3, -1, -1);
+        setPixel(canvas, row + 3, col, 'm', 2, i + 3, 2, i + 3);
+        setPixel(canvas, row + 3, col + 1, 'u', 2, i + 3, -1, -1);
+        setPixel(canvas, row + 4, col, 'b', 2, i + 6, -1, -1);
+        setPixel(canvas, row + 4, col + 1, 'm', 2, i + 6, 2, i + 6);
+        setPixel(canvas, row + 6, col, 'u', 2, i + 6, -1, -1);
+        row--;
+        col += 2;
+    }
+}
+
+static char *getVisualComponent(char code, char mode)
+{
+    if (mode == 0)
+    {
+        switch (code)
+        {
+        case 0:
+            return BG_FFCOLOR;
+        case 1:
+            return BG_UFCOLOR;
+        case 2:
+            return BG_RFCOLOR;
+        case 3:
+            return BG_LFCOLOR;
+        case 4:
+            return BG_DFCOLOR;
+        case 5:
+            return BG_BFCOLOR;
+        default:
+            break;
+        }
+    }
+    else if (mode == 1)
+    {
+        switch (code)
+        {
+        case 0:
+            return FFCOLOR;
+        case 1:
+            return UFCOLOR;
+        case 2:
+            return RFCOLOR;
+        case 3:
+            return LFCOLOR;
+        case 4:
+            return DFCOLOR;
+        case 5:
+            return BFCOLOR;
+        default:
+            break;
+        }
+    }
+    else if (mode == 2)
+    {
+        switch (code)
+        {
+        case 'u':
+            return UH_BLOCK;
+            break;
+        case 'm':
+            return BLOCK;
+            break;
+        case 'b':
+            return BH_BLOCK;
+            break;
+        default:
+            break;
+        }
+    }
+
+    return "";
+}
+
+void renderCube(Cube cube, char *buffer, size_t bufferSize)
+{
+    int i, j, bufferIndex = 0;
+    char fgColorsCache[3][9][24];
+    char bgColorsCache[3][9][24];
+    pixel canvas[11][21];
+
+    for (i = 0; i < 11; i++)
+    {
+        for (j = 0; j < 21; j++)
+        {
+            canvas[i][j].block = '\0';
+            canvas[i][j].fgFace = -1;
+            canvas[i][j].bgFace = -1;
+        }
+    }
+    memset(buffer, '\0', bufferSize);
+    for (i = 0; i < 3; i++)
+    {
+        for (j = 0; j < 9; j++)
+        {
+            strcpy(fgColorsCache[i][j], getVisualComponent(cube.faceValue[cube.facePosition[i]][j], 1));
+            strcpy(bgColorsCache[i][j], getVisualComponent(cube.faceValue[cube.facePosition[i]][j], 0));
+        }
+    }
+
+    drawUpFace(canvas);
+    drawFrontFace(canvas);
+    drawRightFace(canvas);
+
+    bufferIndex += sprintf(buffer + bufferIndex, "%s", "\x1b[1;46H");
+    for (i = 0; i < 11; i++)
+    {
+        for (j = 0; j < 21; j++)
+        {
+            if (canvas[i][j].block != '\0')
+            {
+                if (canvas[i][j].block == ' ')
+                {
+                    bufferIndex += sprintf(buffer + bufferIndex, "%c", ' ');
+                }
+                else if (canvas[i][j].block == 'n')
+                {
+                    bufferIndex += sprintf(buffer + bufferIndex, "%s", N_BLOCK);
+                }
+                else
+                {
+                    if (canvas[i][j].bgFace != -1)
+                    {
+                        bufferIndex += sprintf(buffer + bufferIndex, "%s", bgColorsCache[canvas[i][j].bgFace][canvas[i][j].bgColor]);
+                    }
+                    if (canvas[i][j].fgFace != -1)
+                    {
+                        bufferIndex += sprintf(buffer + bufferIndex, "%s", fgColorsCache[canvas[i][j].fgFace][canvas[i][j].fgColor]);
+                    }
+                    bufferIndex += sprintf(buffer + bufferIndex, "%s", getVisualComponent(canvas[i][j].block, 2));
+                    bufferIndex += sprintf(buffer + bufferIndex, "%s", RESET);
+                }
+            }
+        }
+        bufferIndex += sprintf(buffer + bufferIndex, "\x1b[%d;%dH", i + 2, (i > 2) ? 40 : 44 - (i * 2));
+    }
+    fputs(buffer, stdout);
+}
+
+static void clearBuffer(void)
+{
+    int clear;
+
+    while ((clear = getchar()) != '\n' && clear != EOF)
+        ;
+}
+
+static void clearTerminal(void)
+{
+    printf("\x1b[2J\x1b[3J\x1b[H");
+}
+
+int handleError(char error)
+{
+    switch (error)
     {
     case 0:
         return 0;
@@ -289,28 +602,14 @@ int throwError(char error)
         printf("Insufficient RAM available. (Press Enter to close)");
         getchar();
         exit(1);
-        return 1;
     default:
         return 0;
     }
 }
 
-void endGame()
+void endGame(void)
 {
     clearTerminal();
     printf("\nGoodbye! (Press Enter to close)\n");
     getchar();
-}
-
-void clearBuffer()
-{
-    int clear;
-
-    while ((clear = getchar()) != '\n' && clear != EOF)
-        ;
-}
-
-void clearTerminal()
-{
-    printf("\x1b[2J\x1b[3J\x1b[H");
 }

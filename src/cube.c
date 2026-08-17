@@ -1,12 +1,13 @@
-#include "cube.h"
-#include "colors.h"
-#include "io_utils.h"
 #include <stdio.h>
 #include <ctype.h>
 #include <stdint.h>
 #include <string.h>
+#include "cube.h"
+#include "io_utils.h"
 
 #define quantMoves 30
+
+static void generateSeed(char *rawSeed, int size, int *actionCode);
 
 void initCube(Cube *cube)
 {
@@ -32,7 +33,7 @@ void initCube(Cube *cube)
     }
 }
 
-void seedGenerator(char *rawSeed, int size, int *actionCode)
+static void generateSeed(char *rawSeed, int size, int *actionCode)
 {
     int i, lastAction = -1, action = -1;
     uint32_t seed = 0;
@@ -67,7 +68,7 @@ void scrambleCube(Cube *cube, char *rawSeed, int size)
 {
     int actionCode[quantMoves], i;
 
-    seedGenerator(rawSeed, size, actionCode);
+    generateSeed(rawSeed, size, actionCode);
     for (i = 0; i < quantMoves; i++)
     {
         switch (actionCode[i])
@@ -116,232 +117,6 @@ void scrambleCube(Cube *cube, char *rawSeed, int size)
             break;
         }
     }
-}
-
-void showCube(Cube cube, char *buffer, size_t bufferSize)
-{
-    int i, j, bufferIndex = 0, col = 46, row = 0;
-    char fgColorsCache[3][9][24];
-    char bgColorsCache[3][9][24];
-    pixel canvas[11][62];
-
-    for (i = 0; i < 11; i++)
-    {
-        for (j = 0; j < 62; j++)
-        {
-            canvas[i][j].block = '\0';
-            canvas[i][j].fgFace = -1;
-            canvas[i][j].fgColor = -1;
-            canvas[i][j].bgFace = -1;
-            canvas[i][j].bgColor = -1;
-        }
-    }
-
-    memset(buffer, '\0', bufferSize);
-
-    for (i = 0; i < 3; i++)
-    {
-        for (j = 0; j < 9; j++)
-        {
-            strcpy(fgColorsCache[i][j], convertColor(cube.faceValue[cube.facePosition[i]][j], 1));
-            strcpy(bgColorsCache[i][j], convertColor(cube.faceValue[cube.facePosition[i]][j], 0));
-        }
-    }
-
-    for (i = 0; i < 9; i++)
-    {
-        setPixel(canvas, row, col, 'b', 1, i, -1, -1);
-        for (j = 1; j < 4; j++)
-        {
-            setPixel(canvas, row, col + j, 'm', 1, i, 1, i);
-        }
-        if ((i + 1) % 3 == 0)
-        {
-            setPixel(canvas, row, col + 4, 'u', 1, i, 2, 2 - ((i - 2) / 3));
-            setPixel(canvas, row, col + 5, 'n', -1, -1, -1, -1);
-            row++;
-            col = 46 - (2 * row);
-        }
-        else
-        {
-            setPixel(canvas, row, col + 4, 'u', 1, i, -1, -1);
-            col += 5;
-        }
-    }
-
-    for (i = 0; i < 6; i++)
-    {
-        for (j = 0; j < 5; j++)
-        {
-            setPixel(canvas, row, col, 'b', 0, i, -1, -1);
-            if (i < 3)
-            {
-                if (j == 4)
-                {
-                    setPixel(canvas, row, col, 'u', 1, i + 6, -1, -1);
-                }
-                if (i == 2 && j == 4)
-                {
-                    setPixel(canvas, row, col, 'u', 1, 8, 2, 0);
-                }
-                else if (j >= 1 && j <= 3)
-                {
-                    setPixel(canvas, row, col, 'b', 0, i, 1, i + 6);
-                }
-            }
-            else
-            {
-                setPixel(canvas, row, col, 'b', 0, i + 3, -1, -1);
-                if (j == 4)
-                {
-                    setPixel(canvas, row, col, ' ', -1, -1, -1, -1);
-                }
-            }
-            col++;
-        }
-        if ((i + 1) % 3 == 0)
-        {
-            if (i == 2)
-            {
-                setPixel(canvas, row, col, 'n', -1, -1, -1, -1);
-                row += 5;
-            }
-            else if (i == 5)
-            {
-                row -= 3;
-            }
-            col = 40;
-        }
-    }
-
-    for (i = 0; i < 6; i++)
-    {
-        for (j = 0; j < 4; j++)
-        {
-            setPixel(canvas, row, col + j, 'u', 0, (i % 3) + (i / 3) * 6, -1, -1);
-        }
-        if ((i + 1) % 3 == 0)
-        {
-            setPixel(canvas, row, col + 4, 'n', -1, -1, -1, -1);
-            if (i == 2)
-            {
-                row += 5;
-            }
-            else
-            {
-                row -= 6;
-            }
-            col = 40;
-        }
-        else
-        {
-            col += 5;
-        }
-    }
-
-    for (i = 0; i < 9; i++)
-    {
-        for (j = 0; j < 4; j++)
-        {
-            if (i >= 3 && i <= 5)
-            {
-                setPixel(canvas, row + 1, col + j, 'm', 0, i, 0, i);
-            }
-            setPixel(canvas, row, col + j, 'm', 0, i, 0, i);
-        }
-        if ((i + 1) % 3 == 0)
-        {
-            setPixel(canvas, row, col + 4, 'n', -1, -1, -1, -1);
-            setPixel(canvas, row + 1, col + 4, 'n', -1, -1, -1, -1);
-            if (i == 2)
-            {
-                row += 2;
-            }
-            else if (i == 5)
-            {
-                row += 3;
-            }
-            else
-            {
-                row = 1;
-            }
-            col = 40;
-        }
-        else
-        {
-            col += 5;
-        }
-    }
-
-    row = 4;
-    col = 54;
-
-    setPixel(canvas, row, col, 'm', 2, 0, 2, 0);
-    setPixel(canvas, row + 1, col, 'b', 2, 3, -1, -1);
-    setPixel(canvas, row + 2, col, 'm', 2, 3, 2, 3);
-    setPixel(canvas, row + 3, col, 'u', 2, 3, -1, -1);
-    setPixel(canvas, row + 4, col, 'm', 2, 6, 2, 6);
-    setPixel(canvas, row + 5, col, 'm', 2, 6, 2, 6);
-    row--;
-    col++;
-
-    for (i = 0; i < 3; i++)
-    {
-        setPixel(canvas, row, col, 'm', 2, i, 2, i);
-        setPixel(canvas, row, col + 1, 'm', 2, i, 2, i);
-        setPixel(canvas, row + 2, col, 'm', 2, i + 3, 2, i + 3);
-        setPixel(canvas, row + 2, col + 1, 'm', 2, i + 3, 2, i + 3);
-        setPixel(canvas, row + 5, col, 'm', 2, i + 6, 2, i + 6);
-        setPixel(canvas, row + 5, col + 1, 'm', 2, i + 6, 2, i + 6);
-        setPixel(canvas, row + 1, col, 'u', 2, i, -1, -1);
-        setPixel(canvas, row + 1, col + 1, 'b', 2, i + 3, -1, -1);
-        setPixel(canvas, row + 3, col, 'm', 2, i + 3, 2, i + 3);
-        setPixel(canvas, row + 3, col + 1, 'u', 2, i + 3, -1, -1);
-        setPixel(canvas, row + 4, col, 'b', 2, i + 6, -1, -1);
-        setPixel(canvas, row + 4, col + 1, 'm', 2, i + 6, 2, i + 6);
-        setPixel(canvas, row + 6, col, 'u', 2, i + 6, -1, -1);
-        row--;
-        col += 2;
-    }
-
-    for (i = 0; i < 11; i++)
-    {
-        for (j = 0; j < 62; j++)
-        {
-            if (canvas[i][j].block != '\0')
-            {
-                if (canvas[i][j].block == ' ')
-                {
-                    bufferIndex += sprintf(buffer + bufferIndex, "%c", ' ');
-                }
-                else if (canvas[i][j].block == 'n')
-                {
-                    bufferIndex += sprintf(buffer + bufferIndex, "%s", "g");
-                }
-                else
-                {
-                    if (canvas[i][j].bgFace != -1)
-                    {
-                        bufferIndex += sprintf(buffer + bufferIndex, "%s", bgColorsCache[canvas[i][j].bgFace][canvas[i][j].bgColor]);
-                    }
-                    if (canvas[i][j].fgFace != -1)
-                    {
-                        bufferIndex += sprintf(buffer + bufferIndex, "%s", fgColorsCache[canvas[i][j].fgFace][canvas[i][j].fgColor]);
-                    }
-
-                    bufferIndex += sprintf(buffer + bufferIndex, "%s", convertBlock(canvas[i][j].block));
-                    bufferIndex += sprintf(buffer + bufferIndex, "%s", RESET);
-                }
-            }
-            else
-            {
-                bufferIndex += sprintf(buffer + bufferIndex, "%c", 'l');
-            }
-        }
-        bufferIndex += sprintf(buffer + bufferIndex, "\n");
-    }
-
-    fputs(buffer, stdout);
 }
 
 void rotateCube(Cube *cube, int column, int row, int move, int specialMove)
@@ -521,21 +296,29 @@ void rotateCube(Cube *cube, int column, int row, int move, int specialMove)
     }
 }
 
-char *convertBlock(char code)
+void evaluateFaces(Cube *cube)
 {
-    switch (code)
+    int i, j, mismatchedColors;
+    char currentColor;
+
+    for (i = 0; i < 6; i++)
     {
-    case 'u':
-        return UH_BLOCK;
-        break;
-    case 'm':
-        return BLOCK;
-        break;
-    case 'b':
-        return BH_BLOCK;
-        break;
-    default:
-        return "deu merda";
-        break;
+        mismatchedColors = 0;
+        currentColor = cube->faceValue[cube->facePosition[i]][0];
+        for (j = 0; j < 9; j++)
+        {
+            if (currentColor != cube->faceValue[cube->facePosition[i]][j])
+            {
+                mismatchedColors++;
+            }
+        }
+        if (mismatchedColors == 0)
+        {
+            cube->faceComplete |= (1 << i);
+        }
+        else
+        {
+            cube->faceComplete &= ~(1 << i);
+        }
     }
 }
