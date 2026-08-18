@@ -24,10 +24,8 @@
 typedef struct pixel
 {
     char block;
-    int fgFace;
-    int fgColor;
-    int bgFace;
-    int bgColor;
+    char fgColor[12];
+    char bgColor[12];
 } pixel;
 
 void setupConsole(void);
